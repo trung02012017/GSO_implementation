@@ -65,6 +65,7 @@ class PSO(object):
             gBest_collection[iter] += self.get_fitness(self.gBest)
             # print(self.get_fitness(self.gBest))
         total_time = round(time.clock() - start_time, 2)
+        # print(total_time)
         return self.get_fitness(self.gBest), gBest_collection, total_time
 
 
@@ -74,11 +75,11 @@ if __name__ == '__main__':
     swarm_sizes = [50, 100, 150]
     range0 = -10
     range1 = 10
-    eps_max = [2000, 3000]
+    eps_max = [100, 200]
     c1_s, c2_s = [2, 2.5], [2, 2.5]
     function_name = 'f1'
     combinations = []
-    stability_number = 10
+    stability_number = 20
 
     for ep_max in eps_max:
         for c1 in c1_s:
@@ -151,11 +152,13 @@ if __name__ == '__main__':
         c1 = combination[4]
         c2 = combination[5]
 
+        # print(str(combination))
         init_position = [np.random.uniform(range0, range1, dimension) for _ in range(swarm_size)]
         PSO_i = PSO(dimension, swarm_size, init_position, ep_max, range0, range1, c1, c2)
         fitness_gBest, gBest_fitness_collection, total_time = PSO_i.run()
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {}'.format(combination, fitness_gBest))
+        print('combination:{} and gBest fitness: {} and total time {}'.format(str(combination), fitness_gBest,
+                                                                              total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)

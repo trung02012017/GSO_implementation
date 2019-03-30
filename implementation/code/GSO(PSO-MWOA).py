@@ -69,7 +69,6 @@ class GalacticSwarmOptimization(object):
         start_time = time.clock()
 
         for i in range(self.ep_max):
-            start_time = time.clock()
             # print("start epoch {}................"
             #       ".............................."
             #       "..............................".format(i))
@@ -99,9 +98,9 @@ if __name__ == '__main__':
     range1 = 10
     m_list = [15, 20, 25]
     n_list = [5, 10]
-    l1_list = [50, 100]
-    l2_list = [100, 200, 300]
-    ep_max = 10
+    l1_list = [5, 10]
+    l2_list = [100, 200]
+    ep_max = 100
     c1, c2 = 2.5, 2.5
 
     def save_result(combination, gBest_fitnes, avg_time_per_epoch):
@@ -200,7 +199,7 @@ if __name__ == '__main__':
         subswarm_collection = GSO.init_population()
         fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {}'.format(combination, fitness_gBest))
+        print('combination:{} and gBest fitness: {} and total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)

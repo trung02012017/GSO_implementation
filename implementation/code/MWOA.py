@@ -138,7 +138,7 @@ if __name__ == '__main__':
     population_sizes = [50, 100, 150]
     range0 = -10
     range1 = 10
-    eps_max = [100, 200, 300]
+    eps_max = [100, 200]
     function_name = 'f1'
     combinations = []
     stability_number = 20
@@ -214,7 +214,7 @@ if __name__ == '__main__':
         MWOA_i = ModifiedWOA(dimension, population_size, population, range0, range1, ep_max)
         fitness_gBest, gBest_fitness_collection, total_time = MWOA_i.run()
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {}'.format(combination, fitness_gBest))
+        print('combination:{} and gBest fitness: {}, total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)

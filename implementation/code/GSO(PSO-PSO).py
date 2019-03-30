@@ -76,8 +76,9 @@ class GalacticSwarmOptimization(object):
             #       ".............................."
             #       "..............................".format(i))
             gBest_collection, gBest_fitness_collection, PSO1_list = GSO.run_phase_1(subswarm_collection, PSO1_list)
+            # print(gBest_fitness_collection)
             gBest, fitness_gBest_i = GSO.run_phase_2(gBest_collection, self.gBest)
-
+            # print(fitness_gBest_i)
             if self.gBest is None:
                 self.gBest = deepcopy(gBest)
             else:
@@ -104,10 +105,10 @@ if __name__ == '__main__':
     range1 = 10
     m_list = [15, 20, 25]
     n_list = [5, 10]
-    l1_list = [50, 100]
-    l2_list = [500, 1000]
-    ep_max = 20
-    c1, c2, c3, c4 = 2.05, 2.05, 2.05, 2.05
+    l1_list = [5, 10]
+    l2_list = [100, 200]
+    ep_max = 100
+    c1, c2, c3, c4 = 2.5, 2.5, 2.5, 2.5
     function_name = 'f1'
     stability_number = 10
 
@@ -188,7 +189,8 @@ if __name__ == '__main__':
         subswarm_collection = GSO.init_population()
         fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {}'.format(combination, fitness_gBest))
+        print('combination:{} and gBest fitness: {} and total time {}'.format(combination, fitness_gBest,
+                                                                              total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)
