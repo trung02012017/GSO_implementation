@@ -21,7 +21,19 @@ class PSO(object):
         self.temp = self.gBest
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(self.varsize)])
+        return sum([particle[i]**2 for i in range(self.varsize)]) # f1
+
+        # x = np.abs(particle)
+        # return np.sum(x) + np.prod(x)  # f2
+
+        # fitness = 0
+        # for i in range(particle.shape[0]):
+        #     for j in range(i + 1):
+        #         fitness += particle[j]
+        # return fitness                  # f3
+
+        # x = np.abs(particle)
+        # return np.max(x)                   # f4
 
     def set_gBest(self, gBest):
         self.gBest = gBest
@@ -75,7 +87,7 @@ if __name__ == '__main__':
     swarm_sizes = [50, 100, 150]
     range0 = -10
     range1 = 10
-    eps_max = [100, 200]
+    eps_max = [100, 200, 300]
     c1_s, c2_s = [2, 2.5], [2, 2.5]
     function_name = 'f1'
     combinations = []

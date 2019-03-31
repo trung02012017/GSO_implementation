@@ -18,7 +18,9 @@ class PSO(object):
         self.temp = self.gBest
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(0, self.varsize)])
+        # return sum([particle[i]**2 for i in range(0, self.varsize)]) #f1
+        x = np.abs(particle)
+        return np.sum(x) + np.prod(x) #f2
 
     def set_gBest(self, gBest):
         self.gBest = gBest

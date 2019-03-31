@@ -18,7 +18,9 @@ class ModifiedWOA(object):
         return ([np.random.uniform(self.range0, self.range1, self.dimension) for _ in range(self.population_size)])
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(self.dimension)])
+        # return sum([particle[i]**2 for i in range(self.dimension)]) #f1
+        x = np.abs(particle)
+        return np.sum(x) + np.prod(x) #f2
 
     def set_best_solution(self, best_solution):
         self.best_solution = best_solution
@@ -69,8 +71,9 @@ class ModifiedWOA(object):
         return (current_whale + math.sqrt(epoch_i)*np.sign(np.random.random(1) - 0.5))*levy
 
     def crossover(self, population):
-        partner_index = np.random.randint(0, self.dimension)
+        partner_index = np.random.randint(0, self.population_size)
         partner = population[partner_index]
+        # partner = np.random.uniform(self.range0, self.range1, self.dimension)
 
         start_point = np.random.randint(0, self.dimension/2)
         new_whale = np.zeros(self.dimension)
@@ -102,13 +105,17 @@ class ModifiedWOA(object):
                 C = 2*r2
                 l = (a2 - 1)*np.random.random(1) + 1
                 p = np.random.random(1)
+                p1 = np.random.random(1)
                 if p < 0.5:
                     if np.abs(A) < 1:
                         updated_whale = self.shrink_encircling_Levy(current_whale, self.best_solution, epoch_i, C)
                     else:
-                        updated_whale = self.explore_new_prey(current_whale, C, A)
+                        if p1 < 0.7:
+                            updated_whale = self.explore_new_prey(current_whale, C, A)
+                        else:
+                            updated_whale = self.crossover(self.population)
                 else:
-                        updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
+                    updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
                 self.population[i] = updated_whale
 
             self.population = self.evaluate_population(self.population)

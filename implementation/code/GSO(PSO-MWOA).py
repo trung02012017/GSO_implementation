@@ -30,7 +30,10 @@ class GalacticSwarmOptimization(object):
         return subswarm_collection
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(0, self.dimension)])
+        return sum([particle[i]**2 for i in range(0, self.dimension)]) #f1
+
+        # x = np.abs(particle)
+        # return np.sum(x) + np.prod(x) # f2
 
     def run_phase_1(self, subswarm_collection, PSO1_list=None): # run PSO in subswarms independently
         gBest_collection = np.zeros((self.m, self.dimension))   # set of gBests of all subswarms after running PSO
@@ -96,31 +99,12 @@ if __name__ == '__main__':
     dimension = 50
     range0 = -10
     range1 = 10
-    m_list = [15, 20, 25]
+    m_list = [15, 20]
     n_list = [5, 10]
-    l1_list = [5, 10]
-    l2_list = [100, 200]
-    ep_max = 100
+    l1_list = [10, 20]
+    l2_list = [200, 300]
+    ep_max = 5
     c1, c2 = 2.5, 2.5
-
-    def save_result(combination, gBest_fitnes, avg_time_per_epoch):
-        path = 'resultGSO(PSO-MWOA).csv'
-        combination = [combination]
-        result = {
-            'combination': combination,
-            'gBest_fitness': format(gBest_fitnes, '.2e'),
-            'avg_time_per_epoch': round(avg_time_per_epoch, 2)
-        }
-
-        df = pd.DataFrame(result)
-        if not os.path.exists(path):
-            columns = ['combination [m, n, l1, l2, ep_max, c1, c2, c3, c4]', 'gBest_fitness', 'avg_time_per_epoch']
-            df.columns = columns
-            df.to_csv(path, index=False, columns=columns)
-        else:
-            with open(path, 'a') as csv_file:
-                df.to_csv(csv_file, mode='a', header=False, index=False)
-
 
     function_name = 'f1'
     stability_number = 20

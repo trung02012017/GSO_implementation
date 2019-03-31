@@ -21,7 +21,19 @@ class ModifiedWOA(object):
         return ([np.random.uniform(self.range0, self.range1, self.dimension) for _ in range(self.population_size)])
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(self.dimension)])
+        return sum([particle[i]**2 for i in range(self.dimension)]) #f1
+
+        # x = np.abs(particle)
+        # return np.sum(x) + np.prod(x) # f2
+
+        # fitness = 0
+        # for i in range(particle.shape[0]):
+        #     for j in range(i + 1):
+        #         fitness += particle[j]
+        # return fitness                   # f3
+
+        # x = np.abs(particle)
+        # return np.max(x)                    # f4
 
     def set_best_solution(self, best_solution):
         self.best_solution = best_solution
@@ -74,6 +86,7 @@ class ModifiedWOA(object):
     def crossover(self, population):
         partner_index = np.random.randint(0, self.population_size)
         partner = population[partner_index]
+        # partner = np.random.uniform(self.range0, self.range1, self.dimension)
 
         start_point = np.random.randint(0, self.dimension/2)
         new_whale = np.zeros(self.dimension)
@@ -96,7 +109,7 @@ class ModifiedWOA(object):
             population = self.population
             for i in range(self.population_size):
                 current_whale = self.population[i]
-                a = 1.5 - 1.5*epoch_i/self.max_ep
+                a = 2 - 2*epoch_i/self.max_ep
                 # a = np.random.uniform(0, 2, 1)
                 # a = 2*np.cos(epoch_i/self.max_ep)
                 # a = math.log((4 - 3*epoch_i/(self.max_ep+1)), 2)
@@ -113,12 +126,12 @@ class ModifiedWOA(object):
                     if np.abs(A) < 1:
                         updated_whale = self.shrink_encircling_Levy(current_whale, self.best_solution, epoch_i, C)
                     else:
-                        updated_whale = self.explore_new_prey(current_whale, C, A)
+                        if p1 < 0.7:
+                            updated_whale = self.explore_new_prey(current_whale, C, A)
+                        else:
+                            updated_whale = self.crossover(self.population)
                 else:
-                    if p1 < 0.6:
-                        updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
-                    else:
-                        updated_whale = self.crossover(self.population)
+                    updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
                 self.population[i] = updated_whale
 
             self.population = self.evaluate_population(self.population)
@@ -135,10 +148,10 @@ class ModifiedWOA(object):
 if __name__ == '__main__':
 
     dimension = 50
-    population_sizes = [50, 100, 150]
+    population_sizes = [100, 150]
     range0 = -10
     range1 = 10
-    eps_max = [100, 200]
+    eps_max = [100, 200, 300]
     function_name = 'f1'
     combinations = []
     stability_number = 20
