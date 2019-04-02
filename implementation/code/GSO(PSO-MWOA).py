@@ -4,12 +4,15 @@ import pandas as pd
 import os.path
 import math
 from copy import deepcopy
+import json
+from fitness_selector import Fitness_Selector
 from PSO_GSO import PSO
 from MWOA_GSO import ModifiedWOA
 
 class GalacticSwarmOptimization(object):
 
-    def __init__(self, dimension, range0, range1, m, n, l1, l2, ep_max, c1, c2):
+    def __init__(self, fitness_function, dimension, range0, range1, m, n, l1, l2, ep_max, c1, c2):
+        self.fitness_function = fitness_function    # fitness function predefined
         self.dimension = dimension      # dimension size
         self.range0 = range0            # lower boundary of the value for each dimension
         self.range1 = range1            # upper boundary of the value for each dimension
@@ -30,10 +33,7 @@ class GalacticSwarmOptimization(object):
         return subswarm_collection
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(0, self.dimension)]) #f1
-
-        # x = np.abs(particle)
-        # return np.sum(x) + np.prod(x) # f2
+        return self.fitness_function(particle)
 
     def run_phase_1(self, subswarm_collection, PSO1_list=None): # run PSO in subswarms independently
         gBest_collection = np.zeros((self.m, self.dimension))   # set of gBests of all subswarms after running PSO
@@ -43,7 +43,8 @@ class GalacticSwarmOptimization(object):
             PSO1_list = []
             for i in range(self.m):
                 subswarm_i = subswarm_collection[i]
-                PSO1_i = PSO(self.dimension, self.n, subswarm_i, self.l1, self.range0, self.range1, self.c1, self.c2)
+                PSO1_i = PSO(self.fitness_function, self.dimension, self.n, subswarm_i, self.l1, self.range0,
+                             self.range1, self.c1, self.c2)
                 gBest_collection[i], gBest_fitness_collection[i] = PSO1_i.run()
                 PSO1_list.append(PSO1_i)
                 # print("gBest of subswarm {} is {}".format(i, gBest_fitness_collection[i]))
@@ -59,7 +60,8 @@ class GalacticSwarmOptimization(object):
                                                             # from each subswarm in phase 1
                                                             # the state of this phase will be ignored at the end of each
                                                             # epoch, only gBest is saved for next epoch
-        WOA = ModifiedWOA(self.dimension, self.m, gBest_collection, self.range0, self.range1, self.l2)
+        WOA = ModifiedWOA(self.fitness_function, self.dimension, self.m, gBest_collection, self.range0, self.range1,
+                          self.l2)
         if gBest is not None:
             WOA.set_best_solution(gBest)
         gBest, fitness_gBest = WOA.run()
@@ -90,31 +92,65 @@ class GalacticSwarmOptimization(object):
             #       ".............................."
             #       "..............................".format(i))
         total_time = time.clock() - start_time
+        # print(self.gBest)
 
         return gBest_fitness_result[-1], gBest_fitness_result, total_time
 
 
 if __name__ == '__main__':
 
-    dimension = 50
-    range0 = -10
-    range1 = 10
-    m_list = [15, 20]
-    n_list = [5, 10]
-    l1_list = [10, 20]
-    l2_list = [200, 300]
-    ep_max = 5
-    c1, c2 = 2.5, 2.5
+    path = os.path.dirname(os.path.realpath(__file__))
+    params_path = os.path.join(os.path.dirname(path), 'parameter_setup', 'params.json')
 
-    function_name = 'f1'
+    with open(params_path, 'r') as f:
+        data = json.load(f)
+
+    igso_parameter_set = data["parameters"]
+
+    fitness_function_names = igso_parameter_set['function']
+    dimensions = igso_parameter_set["dimension"]
+    range0_s = igso_parameter_set["range0"]
+    range1_s = igso_parameter_set["range1"]
+
+    m_s = igso_parameter_set["IGSO"]['m']
+    n_s = igso_parameter_set["IGSO"]['n']
+    l1_s = igso_parameter_set["IGSO"]['l1']
+    l2_s = igso_parameter_set["IGSO"]['l2']
+    max_ep_s = igso_parameter_set["IGSO"]['max_ep']
+    c1_s = igso_parameter_set["IGSO"]["c1"]
+    c2_s = igso_parameter_set["IGSO"]["c2"]
+
     stability_number = 20
+    combinations = []
 
+    for fitness_function_name in fitness_function_names:
+        if fitness_function_name == 'f18' or fitness_function_name == 'f19':
+            continue
+        for dimension in dimensions:
+            for range0 in range0_s:
+                for range1 in range1_s:
+                    if round(range0 + range1) != 0:
+                        continue
+                    for m in m_s:
+                        for n in n_s:
+                            for l1 in l1_s:
+                                for l2 in l2_s:
+                                    for c1 in c1_s:
+                                        for c2 in c2_s:
+                                            for max_ep in max_ep_s:
+                                                function_evaluation = (m * n * l1 + m * l2) * max_ep
+                                                combination = [fitness_function_name, dimension, range0, range1,
+                                                               m, n, l1, l2, max_ep, c1, c2, function_evaluation]
+                                                if 30000 >= function_evaluation >= 25000:
+                                                    combinations.append(combination)
+    print(len(combinations))
 
     def save_result(combination, all_gbests, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/IGSO(GSO+MWOA)/'
+
+        fitness_function_name = combination[0]
+        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
         path1 = path + 'error_IGSO' + str(combination) + '.csv'
         path2 = path + 'models_log.csv'
-        path3 = path + 'stability_igso.csv'
         combination = [combination]
         error = {
             'epoch': range(1, 1 + all_gbests.shape[0]),
@@ -123,13 +159,13 @@ if __name__ == '__main__':
 
         model_log = {
             'combination': combination,
-            'total_time': total_time,
+            'total_time': round(total_time, 2),
             'gBest_fitness': gBest_fitness,
         }
 
         df_error = pd.DataFrame(error)
         if not os.path.exists(path1):
-            columns = ['combination [m, n, l1, l2, ep_max, c1, c2]', 'gBest_fitness']
+            columns = ['epoch', 'gBest_fitness']
             df_error.columns = columns
             df_error.to_csv(path1, index=False, columns=columns)
         else:
@@ -138,7 +174,9 @@ if __name__ == '__main__':
 
         df_models_log = pd.DataFrame(model_log)
         if not os.path.exists(path2):
-            columns = ['model_name]', 'total_time', 'gBest_fitness']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, m, n, l1, l2, max_ep, c1 ,c2, '
+                       'function evaluation]',
+                       'total_time', 'gBest_fitness']
             df_models_log.columns = columns
             df_models_log.to_csv(path2, index=False, columns=columns)
         else:
@@ -146,8 +184,8 @@ if __name__ == '__main__':
                 df_models_log.to_csv(csv_file, mode='a', header=False, index=False)
 
 
-    def save_result_stability(params, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/IGSO(GSO+MWOA)/'
+    def save_result_stability(params, fitness_function_name, gBest_fitness, total_time):
+        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
         path3 = path + 'stability_igso.csv'
         stability = {
             'combination': params,
@@ -157,7 +195,9 @@ if __name__ == '__main__':
 
         df_stability = pd.DataFrame(stability)
         if not os.path.exists(path3):
-            columns = ['combination [m, n, l1, l2, ep_max, c1, c2]', 'gBest_fitness', 'total_time']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, m, n, l1, l2, max_ep, c1, c2, '
+                       'function evaluation]',
+                       'gBest_fitness', 'total_time']
             df_stability.columns = columns
             df_stability.to_csv(path3, index=False, columns=columns)
         else:
@@ -165,21 +205,31 @@ if __name__ == '__main__':
                 df_stability.to_csv(csv_file, mode='a', header=False, index=False)
 
 
-    combinations = []
-    for m in m_list:
-        for n in n_list:
-            for l1 in l1_list:
-                for l2 in l2_list:
-                    combination = [m, n, l1, l2, ep_max, c1, c2]
-                    combinations.append(combination)
+    # fitness_selector = Fitness_Selector()
+    # fitness_function = fitness_selector.chose_function('f1')
+    #
+    # GSO = GalacticSwarmOptimization(fitness_function, 50, -10, 10, 15, 5, 10, 300, 5, 2.5, 2.5)
+    # subswarm_collection = GSO.init_population()
+    # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
+    # print(gBest_fitness_collection)
 
     for combination in combinations:
-        m = combination[0]
-        n = combination[1]
-        l1 = combination[2]
-        l2 = combination[3]
+        fitness_function_name = combination[0]
+        dimension = combination[1]
+        range0 = combination[2]
+        range1 = combination[3]
+        m = combination[4]
+        n = combination[5]
+        l1 = combination[6]
+        l2 = combination[7]
+        max_ep = combination[8]
+        c1 = combination[9]
+        c2 = combination[10]
 
-        GSO = GalacticSwarmOptimization(dimension, range0, range1, m, n, l1, l2, ep_max, c1, c2)
+        fitness_selector = Fitness_Selector()
+        fitness_function = fitness_selector.chose_function(fitness_function_name)
+
+        GSO = GalacticSwarmOptimization(fitness_function, dimension, range0, range1, m, n, l1, l2, max_ep, c1, c2)
         subswarm_collection = GSO.init_population()
         fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
@@ -189,13 +239,13 @@ if __name__ == '__main__':
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            GSO_i = GalacticSwarmOptimization(dimension, range0, range1, m, n, l1, l2, ep_max, c1, c2)
+            GSO_i = GalacticSwarmOptimization(fitness_function, dimension, range0, range1, m, n, l1, l2, max_ep, c1, c2)
             subswarm_collection = GSO_i.init_population()
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = GSO_i.run(subswarm_collection)
             fitness_gBest[i] += fitness_gBest_i
             total_time[i] += total_time_i
             params.append(str(combination))
-        save_result_stability(params, fitness_gBest, total_time)
+        save_result_stability(params, fitness_function_name, fitness_gBest, total_time)
 
 
 

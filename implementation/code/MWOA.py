@@ -4,10 +4,14 @@ import math
 import time
 import pandas as pd
 import os
+import json
+from fitness_selector import Fitness_Selector
+from save_results import save_result, save_result_stability
 
 class ModifiedWOA(object):
 
-    def __init__(self, dimension, population_size, population, range0, range1, max_ep):
+    def __init__(self, fitness_function, dimension, population_size, population, range0, range1, max_ep):
+        self.fitness_function = fitness_function
         self.dimension = dimension  # dimension size
         self.population_size = population_size
         self.population = population
@@ -21,19 +25,7 @@ class ModifiedWOA(object):
         return ([np.random.uniform(self.range0, self.range1, self.dimension) for _ in range(self.population_size)])
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(self.dimension)]) #f1
-
-        # x = np.abs(particle)
-        # return np.sum(x) + np.prod(x) # f2
-
-        # fitness = 0
-        # for i in range(particle.shape[0]):
-        #     for j in range(i + 1):
-        #         fitness += particle[j]
-        # return fitness                   # f3
-
-        # x = np.abs(particle)
-        # return np.max(x)                    # f4
+        return self.fitness_function(particle)
 
     def set_best_solution(self, best_solution):
         self.best_solution = best_solution
@@ -106,7 +98,6 @@ class ModifiedWOA(object):
         gBest_collection = np.zeros(self.max_ep)
         start_time = time.clock()
         for epoch_i in range(self.max_ep):
-            population = self.population
             for i in range(self.population_size):
                 current_whale = self.population[i]
                 a = 2 - 2*epoch_i/self.max_ep
@@ -126,10 +117,7 @@ class ModifiedWOA(object):
                     if np.abs(A) < 1:
                         updated_whale = self.shrink_encircling_Levy(current_whale, self.best_solution, epoch_i, C)
                     else:
-                        if p1 < 0.7:
-                            updated_whale = self.explore_new_prey(current_whale, C, A)
-                        else:
-                            updated_whale = self.crossover(self.population)
+                        updated_whale = self.explore_new_prey(current_whale, C, A)
                 else:
                     updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
                 self.population[i] = updated_whale
@@ -147,41 +135,63 @@ class ModifiedWOA(object):
 
 if __name__ == '__main__':
 
-    dimension = 50
-    population_sizes = [100, 150]
-    range0 = -10
-    range1 = 10
-    eps_max = [100, 200, 300]
-    function_name = 'f1'
-    combinations = []
-    stability_number = 20
+    path = os.path.dirname(os.path.realpath(__file__))
+    params_path = os.path.join(os.path.dirname(path), 'parameter_setup', 'params.json')
 
-    for ep_max in eps_max:
-        for population_size in population_sizes:
-            combination_i = [range0, range1, population_size, ep_max]
-            combinations.append(combination_i)
+    with open(params_path, 'r') as f:
+        data = json.load(f)
+
+    parameter_set = data["parameters"]
+
+    fitness_function_names = parameter_set['function']
+    dimensions = parameter_set["dimension"]
+    range0_s = parameter_set["range0"]
+    range1_s = parameter_set["range1"]
+
+    population_sizes = parameter_set["MWOA"]['population_size']
+    max_eps = parameter_set["MWOA"]['max_ep']
+
+    stability_number = 20
+    combinations = []
+
+    for fitness_function_name in fitness_function_names:
+        if fitness_function_name == 'f18' or fitness_function_name == 'f19':
+            continue
+        for dimension in dimensions:
+            for range0 in range0_s:
+                for range1 in range1_s:
+                    if round(range0 + range1) != 0:
+                        continue
+                    for population_size in population_sizes:
+                        for max_ep in max_eps:
+                            function_evaluation = population_size * max_ep
+                            combination = [fitness_function_name, dimension, range0, range1,
+                                           population_size, max_ep, function_evaluation]
+                            if 30000 >= function_evaluation >= 25000:
+                                combinations.append(combination)
+    print(len(combinations))
 
     def save_result(combination, all_gbests, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/MWOA/'
+
+        fitness_function_name = combination[0]
+        path = '../results/' + str(fitness_function_name) + '/MWOA/'
         path1 = path + 'error_MWOA' + str(combination) + '.csv'
         path2 = path + 'models_log.csv'
-        path3 = path + 'stability_mwoa.csv'
         combination = [combination]
         error = {
-            'epoch': range(1, 1+all_gbests.shape[0]),
+            'epoch': range(1, 1 + all_gbests.shape[0]),
             'gBest_fitness': all_gbests,
         }
 
         model_log = {
             'combination': combination,
-            'total_time': total_time,
+            'total_time': round(total_time, 2),
             'gBest_fitness': gBest_fitness,
         }
 
-
         df_error = pd.DataFrame(error)
         if not os.path.exists(path1):
-            columns = ['combination [range0, range1, ep_max, c1, c2]', 'gBest_fitness']
+            columns = ['epoch', 'gBest_fitness']
             df_error.columns = columns
             df_error.to_csv(path1, index=False, columns=columns)
         else:
@@ -190,7 +200,9 @@ if __name__ == '__main__':
 
         df_models_log = pd.DataFrame(model_log)
         if not os.path.exists(path2):
-            columns = ['model_name]', 'total_time', 'gBest_fitness']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, population_size, max_ep, '
+                       'function evaluation]',
+                       'total_time', 'gBest_fitness']
             df_models_log.columns = columns
             df_models_log.to_csv(path2, index=False, columns=columns)
         else:
@@ -198,45 +210,59 @@ if __name__ == '__main__':
                 df_models_log.to_csv(csv_file, mode='a', header=False, index=False)
 
 
-    def save_result_stability(params, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/MWOA/'
-        path3 = path + 'stability_mwoa.csv'
+    def save_result_stability(params, fitness_function_name, gBest_fitness, total_time):
+        path = '../results/' + str(fitness_function_name) + '/MWOA/'
+        path3 = path + 'stability_igso.csv'
         stability = {
             'combination': params,
             'gBest_fitness': gBest_fitness,
             'total_time': total_time,
         }
 
-
         df_stability = pd.DataFrame(stability)
         if not os.path.exists(path3):
-            columns = ['combination [range0, range1, ep_max, c1, c2]', 'gBest_fitness', 'total_time']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, population_size, max_ep, '
+                       'function evaluation]',
+                       'gBest_fitness', 'total_time']
             df_stability.columns = columns
             df_stability.to_csv(path3, index=False, columns=columns)
         else:
             with open(path3, 'a') as csv_file:
                 df_stability.to_csv(csv_file, mode='a', header=False, index=False)
 
+
+    # fitness_selector = Fitness_Selector()
+    # fitness_function = fitness_selector.chose_function('f1')
+    #
+    # GSO = GalacticSwarmOptimization(fitness_function, 50, -10, 10, 15, 5, 10, 300, 5, 2.5, 2.5)
+    # subswarm_collection = GSO.init_population()
+    # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
+    # print(gBest_fitness_collection)
+
     for combination in combinations:
-        range0 = combination[0]
-        range1 = combination[1]
-        population_size = combination[2]
-        ep_max = combination[3]
+        fitness_function_name = combination[0]
+        dimension = combination[1]
+        range0 = combination[2]
+        range1 = combination[3]
+        population_size = combination[4]
+        max_ep = combination[5]
+
+        fitness_selector = Fitness_Selector()
+        fitness_function = fitness_selector.chose_function(fitness_function_name)
 
         population = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
-        MWOA_i = ModifiedWOA(dimension, population_size, population, range0, range1, ep_max)
-        fitness_gBest, gBest_fitness_collection, total_time = MWOA_i.run()
+        MWOA = ModifiedWOA(fitness_function, dimension, population_size, population, range0, range1, max_ep)
+        fitness_gBest, gBest_fitness_collection, total_time = MWOA.run()
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {}, total time: {}'.format(combination, fitness_gBest, total_time))
+        print('combination:{} and gBest fitness: {} and total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            population = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
-            MWOA_i = ModifiedWOA(dimension, population_size, population, range0, range1, ep_max)
+            MWOA_i = ModifiedWOA(fitness_function, dimension, population_size, population, range0, range1, max_ep)
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = MWOA_i.run()
             fitness_gBest[i] += fitness_gBest_i
             total_time[i] += total_time_i
             params.append(str(combination))
-        save_result_stability(params, fitness_gBest, total_time)
+        save_result_stability(params, fitness_function_name, fitness_gBest, total_time)

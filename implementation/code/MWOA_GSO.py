@@ -4,7 +4,8 @@ import math
 
 class ModifiedWOA(object):
 
-    def __init__(self, dimension, population_size, population, range0, range1, max_ep):
+    def __init__(self, fitness_function, dimension, population_size, population, range0, range1, max_ep):
+        self.fitness_function = fitness_function
         self.dimension = dimension  # dimension size
         self.population_size = population_size
         self.population = population
@@ -18,9 +19,7 @@ class ModifiedWOA(object):
         return ([np.random.uniform(self.range0, self.range1, self.dimension) for _ in range(self.population_size)])
 
     def get_fitness(self, particle):
-        # return sum([particle[i]**2 for i in range(self.dimension)]) #f1
-        x = np.abs(particle)
-        return np.sum(x) + np.prod(x) #f2
+        return self.fitness_function(particle)
 
     def set_best_solution(self, best_solution):
         self.best_solution = best_solution
@@ -93,7 +92,7 @@ class ModifiedWOA(object):
         for epoch_i in range(self.max_ep):
             for i in range(self.population_size):
                 current_whale = self.population[i]
-                a = 1.5 - 1.5*epoch_i/self.max_ep
+                a = 2 - 2*epoch_i/self.max_ep
                 # a = np.random.uniform(0, 2, 1)
                 # a = 2*np.cos(epoch_i/self.max_ep)
                 # a = math.log((4 - 3*epoch_i/(self.max_ep+1)), 2)

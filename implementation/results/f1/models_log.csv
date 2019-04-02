@@ -1,3 +1,0 @@
-model_name,time_total_train (s),gbest_fitness
-"GA_[3, 4, 4]",12.45,2.30E-09
-"PSO_[1, 2, 3, 5, 6]",6.1,1.00E-03

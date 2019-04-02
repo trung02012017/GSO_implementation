@@ -3,10 +3,13 @@ from copy import deepcopy
 import pandas as pd
 import os
 import time
+import json
+from fitness_selector import Fitness_Selector
 
-class PSO(object):
+class ParticleSwarmOptimization(object):
 
-    def __init__(self, varsize, swarmsize, position, epochs, range0, range1, c1, c2):
+    def __init__(self, fitness_function, varsize, swarmsize, position, epochs, range0, range1, c1, c2):
+        self.fitness_function = fitness_function
         self.varsize = varsize
         self.swarmsize = swarmsize
         self.epochs = epochs
@@ -21,19 +24,7 @@ class PSO(object):
         self.temp = self.gBest
 
     def get_fitness(self, particle):
-        return sum([particle[i]**2 for i in range(self.varsize)]) # f1
-
-        # x = np.abs(particle)
-        # return np.sum(x) + np.prod(x)  # f2
-
-        # fitness = 0
-        # for i in range(particle.shape[0]):
-        #     for j in range(i + 1):
-        #         fitness += particle[j]
-        # return fitness                  # f3
-
-        # x = np.abs(particle)
-        # return np.max(x)                   # f4
+        return self.fitness_function(particle)
 
     def set_gBest(self, gBest):
         self.gBest = gBest
@@ -83,44 +74,67 @@ class PSO(object):
 
 if __name__ == '__main__':
 
-    dimension = 50
-    swarm_sizes = [50, 100, 150]
-    range0 = -10
-    range1 = 10
-    eps_max = [100, 200, 300]
-    c1_s, c2_s = [2, 2.5], [2, 2.5]
-    function_name = 'f1'
-    combinations = []
-    stability_number = 20
+    path = os.path.dirname(os.path.realpath(__file__))
+    params_path = os.path.join(os.path.dirname(path), 'parameter_setup', 'params.json')
 
-    for ep_max in eps_max:
-        for c1 in c1_s:
-            for c2 in c2_s:
-                for swarm_size in swarm_sizes:
-                    combination_i = [range0, range1, swarm_size, ep_max, c1, c2]
-                    combinations.append(combination_i)
+    with open(params_path, 'r') as f:
+        data = json.load(f)
+
+    parameter_set = data["parameters"]
+
+    fitness_function_names = parameter_set['function']
+    dimensions = parameter_set["dimension"]
+    range0_s = parameter_set["range0"]
+    range1_s = parameter_set["range1"]
+
+    population_sizes = parameter_set["PSO"]['population_size']
+    max_eps = parameter_set["PSO"]['max_ep']
+    c1_s = parameter_set["PSO"]['c1']
+    c2_s = parameter_set["PSO"]['c1']
+
+    stability_number = 20
+    combinations = []
+
+    for fitness_function_name in fitness_function_names:
+        if fitness_function_name == 'f18' or fitness_function_name == 'f19':
+            continue
+        for dimension in dimensions:
+            for range0 in range0_s:
+                for range1 in range1_s:
+                    if round(range0 + range1) != 0:
+                        continue
+                    for population_size in population_sizes:
+                        for max_ep in max_eps:
+                            for c1 in c1_s:
+                                for c2 in c2_s:
+                                    function_evaluation = population_size * max_ep
+                                    combination = [fitness_function_name, dimension, range0, range1,
+                                                   population_size, max_ep, c1, c2, function_evaluation]
+                                    if 30000 >= function_evaluation >= 25000:
+                                        combinations.append(combination)
+    print(len(combinations))
 
     def save_result(combination, all_gbests, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/PSO/'
+
+        fitness_function_name = combination[0]
+        path = '../results/' + str(fitness_function_name) + '/PSO/'
         path1 = path + 'error_PSO' + str(combination) + '.csv'
         path2 = path + 'models_log.csv'
-        path3 = path + 'stability_pso.csv'
         combination = [combination]
         error = {
-            'epoch': range(1, 1+all_gbests.shape[0]),
+            'epoch': range(1, 1 + all_gbests.shape[0]),
             'gBest_fitness': all_gbests,
         }
 
         model_log = {
             'combination': combination,
-            'total_time': total_time,
+            'total_time': round(total_time, 2),
             'gBest_fitness': gBest_fitness,
         }
 
-
         df_error = pd.DataFrame(error)
         if not os.path.exists(path1):
-            columns = ['combination [range0, range1, ep_max, c1, c2]', 'gBest_fitness']
+            columns = ['epoch', 'gBest_fitness']
             df_error.columns = columns
             df_error.to_csv(path1, index=False, columns=columns)
         else:
@@ -129,7 +143,9 @@ if __name__ == '__main__':
 
         df_models_log = pd.DataFrame(model_log)
         if not os.path.exists(path2):
-            columns = ['model_name]', 'total_time', 'gBest_fitness']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, population_size, max_ep, '
+                       'c1, c2, function evaluation]',
+                       'total_time', 'gBest_fitness']
             df_models_log.columns = columns
             df_models_log.to_csv(path2, index=False, columns=columns)
         else:
@@ -137,8 +153,8 @@ if __name__ == '__main__':
                 df_models_log.to_csv(csv_file, mode='a', header=False, index=False)
 
 
-    def save_result_stability(params, gBest_fitness, total_time):
-        path = '../results/' + str(function_name) + '/PSO/'
+    def save_result_stability(params, fitness_function_name, gBest_fitness, total_time):
+        path = '../results/' + str(fitness_function_name) + '/PSO/'
         path3 = path + 'stability_pso.csv'
         stability = {
             'combination': params,
@@ -146,42 +162,55 @@ if __name__ == '__main__':
             'total_time': total_time,
         }
 
-
         df_stability = pd.DataFrame(stability)
         if not os.path.exists(path3):
-            columns = ['combination [range0, range1, ep_max, c1, c2]', 'gBest_fitness', 'total_time']
+            columns = ['combination = [fitness_function_name, dimension, range0, range1, population_size, max_ep, '
+                       'c1, c2, function evaluation]',
+                       'gBest_fitness', 'total_time']
             df_stability.columns = columns
             df_stability.to_csv(path3, index=False, columns=columns)
         else:
             with open(path3, 'a') as csv_file:
                 df_stability.to_csv(csv_file, mode='a', header=False, index=False)
 
-    for combination in combinations:
-        range0 = combination[0]
-        range1 = combination[1]
-        swarm_size = combination[2]
-        ep_max = combination[3]
-        c1 = combination[4]
-        c2 = combination[5]
 
-        # print(str(combination))
-        init_position = [np.random.uniform(range0, range1, dimension) for _ in range(swarm_size)]
-        PSO_i = PSO(dimension, swarm_size, init_position, ep_max, range0, range1, c1, c2)
-        fitness_gBest, gBest_fitness_collection, total_time = PSO_i.run()
+    # fitness_selector = Fitness_Selector()
+    # fitness_function = fitness_selector.chose_function('f1')
+    #
+    # GSO = GalacticSwarmOptimization(fitness_function, 50, -10, 10, 15, 5, 10, 300, 5, 2.5, 2.5)
+    # subswarm_collection = GSO.init_population()
+    # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
+    # print(gBest_fitness_collection)
+
+    for combination in combinations:
+        fitness_function_name = combination[0]
+        dimension = combination[1]
+        range0 = combination[2]
+        range1 = combination[3]
+        population_size = combination[4]
+        max_ep = combination[5]
+        c1 = combination[6]
+        c2 = combination[7]
+
+        fitness_selector = Fitness_Selector()
+        fitness_function = fitness_selector.chose_function(fitness_function_name)
+
+        population = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
+        PSO = ParticleSwarmOptimization(fitness_function, dimension, population_size, population, max_ep, range0, range1, c1, c2)
+        fitness_gBest, gBest_fitness_collection, total_time = PSO.run()
         save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
-        print('combination:{} and gBest fitness: {} and total time {}'.format(str(combination), fitness_gBest,
-                                                                              total_time))
+        print('combination:{} and gBest fitness: {} and total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            init_position = [np.random.uniform(range0, range1, dimension) for _ in range(swarm_size)]
-            PSO_i = PSO(dimension, swarm_size, init_position, ep_max, range0, range1, c1, c2)
+            PSO_i = ParticleSwarmOptimization(fitness_function, dimension, population_size, population,
+                                              max_ep, range0, range1, c1, c2)
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = PSO_i.run()
             fitness_gBest[i] += fitness_gBest_i
             total_time[i] += total_time_i
             params.append(str(combination))
-        save_result_stability(params, fitness_gBest, total_time)
+        save_result_stability(params, fitness_function_name, fitness_gBest, total_time)
 
 

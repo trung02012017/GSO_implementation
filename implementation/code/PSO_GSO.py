@@ -3,7 +3,8 @@ from copy import deepcopy
 
 class PSO(object):
 
-    def __init__(self, varsize, swarmsize, position, epochs, range0, range1, c1, c2):
+    def __init__(self, fitness_function, varsize, swarmsize, position, epochs, range0, range1, c1, c2):
+        self.fitness_function = fitness_function
         self.varsize = varsize
         self.swarmsize = swarmsize
         self.epochs = epochs
@@ -18,9 +19,7 @@ class PSO(object):
         self.temp = self.gBest
 
     def get_fitness(self, particle):
-        # return sum([particle[i]**2 for i in range(0, self.varsize)]) #f1
-        x = np.abs(particle)
-        return np.sum(x) + np.prod(x) #f2
+        return self.fitness_function(particle)
 
     def set_gBest(self, gBest):
         self.gBest = gBest
