@@ -182,6 +182,8 @@ if __name__ == '__main__':
     # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
     # print(gBest_fitness_collection)
 
+    model_name = "PSO"
+
     for combination in combinations:
         fitness_function_name = combination[0]
         dimension = combination[1]
@@ -191,6 +193,10 @@ if __name__ == '__main__':
         max_ep = combination[5]
         c1 = combination[6]
         c2 = combination[7]
+
+        path = "../results/" + fitness_function_name + "/" + model_name
+        if not os.path.exists(path):
+            os.mkdir(path)
 
         fitness_selector = Fitness_Selector()
         fitness_function = fitness_selector.chose_function(fitness_function_name)

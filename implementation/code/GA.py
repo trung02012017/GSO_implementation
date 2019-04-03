@@ -251,6 +251,8 @@ if __name__ == "__main__":
             with open(path3, 'a') as csv_file:
                 df_stability.to_csv(csv_file, mode='a', header=False, index=False)
 
+    model_name = "GA"
+
     for combination in combinations:
         fitness_function_name = combination[0]
         dimension = combination[1]
@@ -261,6 +263,10 @@ if __name__ == "__main__":
         crossover_rate = combination[5]
         mutation_rate = combination[6]
         max_ep = combination[7]
+
+        path = "../results/" + fitness_function_name + "/" + model_name
+        if not os.path.exists(path):
+            os.mkdir(path)
 
         fitness_selector = Fitness_Selector()
         fitness_function = fitness_selector.chose_function(fitness_function_name)
