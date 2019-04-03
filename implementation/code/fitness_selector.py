@@ -1,6 +1,6 @@
 import numpy as np
 import json
-import os.path
+import os
 
 class Fitness_Selector(object):
 
@@ -137,18 +137,12 @@ if __name__ == '__main__':
     # print(fitness_function(a))
     # print(round(1.1) - 1 )
     path = os.path.dirname(os.path.realpath(__file__))
-    params_path = os.path.join(os.path.dirname(path), 'parameter_setup', 'params_demo.json')
+    params_path = os.path.join(os.path.dirname(path), 'parameter_setup')
+    print(params_path)
+    for file in os.listdir(params_path):
+        print(file)
 
-    with open(params_path, 'r') as f:
-        # data_str = json.dumps(f.read())
-        # data = json.loads(data_str)
-        data = json.load(f)
-        print(data)
 
-# with open("parameter_setup/params.json", 'r') as f:
-#     # data_str = json.dumps(f.read())
-#     # data = json.loads(data_str)
-#     data = json.load(f)
 #
 # igso_parameter_set = data["parameters"]["IGSO"]
 # m_s = igso_parameter_set['m']

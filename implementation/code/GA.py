@@ -276,7 +276,8 @@ if __name__ == "__main__":
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            GA_i = GenericAlgorithm(fitness_function, dimension, population_size, population, num_selected_parents,
+            population_i = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
+            GA_i = GenericAlgorithm(fitness_function, dimension, population_size, population_i, num_selected_parents,
                                   crossover_rate, mutation_rate, max_ep)
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = GA_i.run()
             fitness_gBest[i] += fitness_gBest_i

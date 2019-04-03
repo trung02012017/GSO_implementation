@@ -109,7 +109,7 @@ class ModifiedWOA(object):
                     if np.abs(A) < 1:
                         updated_whale = self.shrink_encircling_Levy(current_whale, self.best_solution, epoch_i, C)
                     else:
-                        if p1 < 0.7:
+                        if p1 < 0.6:
                             updated_whale = self.explore_new_prey(current_whale, C, A)
                         else:
                             updated_whale = self.crossover(self.population)

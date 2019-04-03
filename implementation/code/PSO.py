@@ -205,7 +205,8 @@ if __name__ == '__main__':
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            PSO_i = ParticleSwarmOptimization(fitness_function, dimension, population_size, population,
+            population_i = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
+            PSO_i = ParticleSwarmOptimization(fitness_function, dimension, population_size, population_i,
                                               max_ep, range0, range1, c1, c2)
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = PSO_i.run()
             fitness_gBest[i] += fitness_gBest_i

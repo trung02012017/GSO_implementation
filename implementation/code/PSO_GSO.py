@@ -33,8 +33,8 @@ class PSO(object):
             w = (self.epochs - iter) / self.epochs * (w_max - w_min) + w_min
             # w = 1 - iter/(self.epochs + 1)
             for i in range(self.swarmsize):
-                r1 = np.random.random()
-                r2 = np.random.random()
+                r1 = np.random.uniform(0, 1)
+                r2 = np.random.uniform(0, 1)
                 position_i = self.position[i]
                 new_velocity_i = w*self.velocity[i] \
                                  + self.c1*r1*(self.pBest[i] - position_i) \

@@ -6,7 +6,6 @@ import pandas as pd
 import os
 import json
 from fitness_selector import Fitness_Selector
-from save_results import save_result, save_result_stability
 
 class ModifiedWOA(object):
 
@@ -260,7 +259,8 @@ if __name__ == '__main__':
         fitness_gBest = np.zeros(stability_number)
         total_time = np.zeros(stability_number)
         for i in range(stability_number):
-            MWOA_i = ModifiedWOA(fitness_function, dimension, population_size, population, range0, range1, max_ep)
+            population_i = [np.random.uniform(range0, range1, dimension) for _ in range(population_size)]
+            MWOA_i = ModifiedWOA(fitness_function, dimension, population_size, population_i, range0, range1, max_ep)
             fitness_gBest_i, gBest_fitness_collection_i, total_time_i = MWOA_i.run()
             fitness_gBest[i] += fitness_gBest_i
             total_time[i] += total_time_i
