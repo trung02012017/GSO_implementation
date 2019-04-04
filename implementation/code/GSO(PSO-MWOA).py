@@ -124,7 +124,8 @@ if __name__ == '__main__':
     combinations = []
 
     for fitness_function_name in fitness_function_names:
-        if fitness_function_name == 'f18' or fitness_function_name == 'f19':
+        if fitness_function_name == 'f18' or fitness_function_name == 'f19' or fitness_function_name == 'f1'\
+                or fitness_function_name == 'f2':
             continue
         for dimension in dimensions:
             for range0 in range0_s:
