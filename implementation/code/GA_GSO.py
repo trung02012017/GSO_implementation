@@ -3,13 +3,12 @@ from copy import deepcopy
 
 class GenericAlgorithm(object):
 
-    def __init__(self, fitness_function, dimension, population_size, population, num_selected_parents, crossover_rate, mutation_rate,
-                 max_ep):
+    def __init__(self, fitness_function, dimension, population_size, population, crossover_rate, mutation_rate, max_ep):
         self.fitness_function = fitness_function
         self.dimension = dimension
         self.population_size = population_size
         self.population = population
-        self.num_selected_parents = num_selected_parents
+        self.num_selected_parents = int(population_size/2)
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
         self.max_ep = max_ep

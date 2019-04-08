@@ -7,8 +7,8 @@ from fitness_selector import Fitness_Selector
 
 class GenericAlgorithm(object):
 
-    def __init__(self, fitness_function, dimension, population_size, population, num_selected_parents, crossover_rate, mutation_rate,
-                 max_ep):
+    def __init__(self, fitness_function, dimension, population_size, population, num_selected_parents, crossover_rate,
+                 mutation_rate, max_ep):
         self.fitness_function = fitness_function
         self.dimension = dimension
         self.population_size = population_size
