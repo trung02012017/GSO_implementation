@@ -85,7 +85,7 @@ class GalacticSwarmOptimization(object):
             gBest_collection, gBest_fitness_collection, GA_list = GSO.run_phase_1(subswarm_collection, GA_list)
             # print(gBest_fitness_collection)
             gBest, fitness_gBest_i = GSO.run_phase_2(gBest_collection, self.gBest)
-            print(fitness_gBest_i)
+            # print(fitness_gBest_i)
             if self.gBest is None:
                 self.gBest = deepcopy(gBest)
             else:
