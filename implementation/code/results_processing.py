@@ -4,6 +4,8 @@ import pandas as pd
 import os
 import operator
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+import sympy
 
 path = os.path.dirname(os.path.realpath(__file__))
 params_path = os.path.join(os.path.dirname(path), 'parameter_setup', 'params.json')
@@ -14,7 +16,8 @@ with open(params_path, 'r') as f:
 parameter_set = data["parameters"]
 
 model_names = ['GA', 'GSO1(PSO+PSO)', 'IGSO(GSO+MWOA)', 'MWOA', 'PSO']
-fitness_function_names = ['f1', 'f2', 'f3', 'f4', 'f5']
+fitness_function_names = ['f1', 'f2', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f13', 'f15', 'f16', 'f17']
+# fitness_function_names = ['f1']
 
 # model_names = ['GA']
 # fitness_function_names = ['f1']
@@ -32,7 +35,6 @@ for dimension in dimensions:
             combination = combination.replace("]", "")
             combination = combination.replace("[", "")
             combinations.append(combination)
-# print(len(combinations))
 
 def load_results(fitness_function_names, model_names, combinations):
     list_result_by_fitness_function = []
@@ -46,8 +48,12 @@ def load_results(fitness_function_names, model_names, combinations):
             for combination in combinations:
                 combination_results_list = []
                 for data_result in data_results:
-                    if combination in data_result[0]:
-                        combination_results_list.append(data_result)
+                    combination_name = data_result[0]
+                    name_split = combination_name.split(',')
+                    function_evaluation = name_split[-1].replace(']', '')
+                    if int(function_evaluation) == 30000:
+                        if combination in data_result[0]:
+                            combination_results_list.append(data_result)
                 best_combination = min(combination_results_list, key=operator.itemgetter(-1))
 
                 if model_name == 'GA':
@@ -148,53 +154,82 @@ def resolve_PSO(PSO_path):
     return max_ep, function_evaluation
 
 results = load_results(fitness_function_names, model_names, combinations)
-result = results[0]
 
-GA_path = result[0]
-GSO1_path = result[1]
-IGSO_path = result[2]
-MWOA_path = result[3]
-PSO_path = result[4]
+a = 0
+for i in range(len(results)):
+    result = results[i]
+    combination_index = a%len(combinations)
+    function_index = int(a/len(combinations))
+    a = a + 1
+    combination = combinations[combination_index]
+    combination_name = fitness_function_names[function_index]+ ' ' + str(combination)
+    GA_path = result[0]
+    GSO1_path = result[1]
+    IGSO_path = result[2]
+    MWOA_path = result[3]
+    PSO_path = result[4]
 
-function_name, dimension, range0, range1, max_ep_GA, function_evaluation_GA = resolve_GA(GA_path)
-max_ep_GSO1, function_evaluation_GSO1 = resolve_GSO1(GSO1_path)
-max_ep_IGSO, function_evaluation_IGSO = resolve_IGSO(IGSO_path)
-max_ep_MWOA, function_evaluation_MWOA = resolve_MWOA(MWOA_path)
-max_ep_PSO, function_evaluation_PSO = resolve_PSO(PSO_path)
+    function_name, dimension, range0, range1, max_ep_GA, function_evaluation_GA = resolve_GA(GA_path)
+    max_ep_GSO1, function_evaluation_GSO1 = resolve_GSO1(GSO1_path)
+    max_ep_IGSO, function_evaluation_IGSO = resolve_IGSO(IGSO_path)
+    max_ep_MWOA, function_evaluation_MWOA = resolve_MWOA(MWOA_path)
+    max_ep_PSO, function_evaluation_PSO = resolve_PSO(PSO_path)
 
-GA_result = pd.read_csv(GA_path).values
-GSO1_result = pd.read_csv(GSO1_path).values
-IGSO_result = pd.read_csv(IGSO_path).values
-MWOA_result = pd.read_csv(MWOA_path).values
-PSO_result = pd.read_csv(PSO_path).values
+    GA_result = pd.read_csv(GA_path).values
+    GSO1_result = pd.read_csv(GSO1_path).values
+    IGSO_result = pd.read_csv(IGSO_path).values
+    MWOA_result = pd.read_csv(MWOA_path).values
+    PSO_result = pd.read_csv(PSO_path).values
 
-for i in range(GA_result.shape[0]):
-    GA_result[i][0] = int(function_evaluation_GA/max_ep_GA*(i+1))
+    for i in range(GA_result.shape[0]):
+        GA_result[i][0] = int(function_evaluation_GA/max_ep_GA*(i+1))
 
-for i in range(GSO1_result.shape[0]):
-    GSO1_result[i][0] = int(function_evaluation_GSO1/max_ep_GSO1*(i+1))
+    for i in range(GSO1_result.shape[0]):
+        GSO1_result[i][0] = int(function_evaluation_GSO1/max_ep_GSO1*(i+1))
 
-for i in range(IGSO_result.shape[0]):
-    IGSO_result[i][0] = int(function_evaluation_IGSO/max_ep_IGSO*(i+1))
+    for i in range(IGSO_result.shape[0]):
+        IGSO_result[i][0] = int(function_evaluation_IGSO/max_ep_IGSO*(i+1))
 
-for i in range(MWOA_result.shape[0]):
-    MWOA_result[i][0] = int(function_evaluation_MWOA/max_ep_MWOA*(i+1))
+    for i in range(MWOA_result.shape[0]):
+        MWOA_result[i][0] = int(function_evaluation_MWOA/max_ep_MWOA*(i+1))
+        MWOA_result[i][1] = sympy.Float(str(MWOA_result[i][1]))
 
-for i in range(PSO_result.shape[0]):
-    PSO_result[i][0] = int(function_evaluation_PSO/max_ep_PSO*(i+1))
+    for i in range(PSO_result.shape[0]):
+        PSO_result[i][0] = int(function_evaluation_PSO/max_ep_PSO*(i+1))
 
+    def log_formatter(x, pos):
+        return "$10^{{{:d}}}$".format(int(x))
 
-fig = plt.figure(figsize=(13,6))
-ax = fig.add_subplot(111)
+    formatter = FuncFormatter(log_formatter)
+    fig, ax = plt.subplots()
 
-ax.set_ylim([0,10^-299])
+    x1 = MWOA_result[:, 0]
+    y1 = list(map(lambda x:sympy.log(x, 10), MWOA_result[:, 1]))
+    ax.plot(x1, y1, label='MWOA')
 
-ax.plot(GA_result[:, 0], GA_result[:, 1])
-ax.plot(GSO1_result[:, 0], GSO1_result[:, 1])
-ax.plot(IGSO_result[:, 0], IGSO_result[:, 1])
-ax.plot(MWOA_result[:, 0], MWOA_result[:, 1])
-ax.plot(PSO_result[:, 0], PSO_result[:, 1])
-ax.grid()
+    x2 = IGSO_result[:, 0]
+    y2 = list(map(lambda x:sympy.log(x, 10), IGSO_result[:, 1]))
+    ax.plot(x2, y2, label='IGSO')
+
+    x3 = GA_result[:, 0]
+    y3 = list(map(lambda x:sympy.log(x, 10), GA_result[:, 1]))
+    ax.plot(x3, y3, label='GA')
+
+    x4 = GSO1_result[:, 0]
+    y4 = list(map(lambda x:sympy.log(x, 10), GSO1_result[:, 1]))
+    ax.plot(x4, y4, label='GSO1')
+
+    x5 = PSO_result[:, 0]
+    y5 = list(map(lambda x:sympy.log(x, 10), PSO_result[:, 1]))
+    ax.plot(x5, y5, label='PSO')
+
+    ax.set_xlabel('Function Evaluation')
+    ax.set_ylabel('Global best fitness')
+    ax.yaxis.set_major_formatter(formatter)
+    ax.grid()
+    plt.legend()
+    plt.savefig(str(combination_name), bbox_inches="tight")
+    plt.close('all')
 
 
 
