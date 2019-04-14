@@ -7,7 +7,7 @@ from copy import deepcopy
 import json
 from fitness_selector import Fitness_Selector
 from PSO_GSO import PSO
-from MWOA_GSO import ModifiedWOA
+from OMWOA_GSO import ModifiedWOA
 
 class GalacticSwarmOptimization(object):
 
@@ -148,8 +148,8 @@ if __name__ == '__main__':
     def save_result(combination, all_gbests, gBest_fitness, total_time):
 
         fitness_function_name = combination[0]
-        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
-        path1 = path + 'error_IGSO' + str(combination) + '.csv'
+        path = '../results/' + str(fitness_function_name) + '/GSO4(GSO+OMWOA)/'
+        path1 = path + 'error_GSO4' + str(combination) + '.csv'
         path2 = path + 'models_log.csv'
         combination = [combination]
         error = {
@@ -185,8 +185,8 @@ if __name__ == '__main__':
 
 
     def save_result_stability(params, fitness_function_name, gBest_fitness, total_time):
-        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
-        path3 = path + 'stability_igso.csv'
+        path = '../results/' + str(fitness_function_name) + '/GSO4(GSO+OMWOA)/'
+        path3 = path + 'stability_gso4.csv'
         stability = {
             'combination': params,
             'gBest_fitness': gBest_fitness,
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
     # print(gBest_fitness_collection)
 
-    model_name = "IGSO(GSO+MWOA)"
+    model_name = "GSO4(GSO+OMWOA)"
 
     for combination in combinations:
         fitness_function_name = combination[0]
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         GSO = GalacticSwarmOptimization(fitness_function, dimension, range0, range1, m, n, l1, l2, max_ep, c1, c2)
         subswarm_collection = GSO.init_population()
         fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
-        save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
+        # save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
         print('combination:{} and gBest fitness: {} and total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []

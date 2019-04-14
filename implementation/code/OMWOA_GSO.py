@@ -64,26 +64,23 @@ class ModifiedWOA(object):
         xich_ma_1, xich_ma_2 = self.caculate_xichma(beta)
         a = np.random.normal(0, xich_ma_1, 1)
         b = np.random.normal(0, xich_ma_2, 1)
-        LB = 0.01*a/(math.pow(np.abs(b), 1/beta))*(C*current_whale - best_solution)
-        D = np.random.uniform(self.range0, self.range1, 1)
+        LB = 0.01*a/(math.pow(np.abs(b), 1/beta))*(current_whale - best_solution)
+        D = np.random.uniform(self.range0, self.range1)
         levy = LB*D
         return (current_whale + 1/math.sqrt(epoch_i + 1)*np.sign(np.random.random(1) - 0.5))*levy
 
-    def crossover(self, population):
-        partner_index = np.random.randint(0, self.population_size)
-        partner = population[partner_index]
+    def quadratic_interpolation(self, population):
+        partner_index = np.random.randint(0, self.population_size, 2)
+        partner1 = population[partner_index[0]]
+        partner2 = population[partner_index[1]]
         # partner = np.random.uniform(self.range0, self.range1, self.dimension)
 
-        start_point = np.random.randint(0, self.dimension/2)
-        new_whale = np.zeros(self.dimension)
-
-        index1 = start_point
-        index2 = int(start_point+self.dimension/2)
-        index3 = int(self.dimension)
-
-        new_whale[0:index1] = self.best_solution[0:index1]
-        new_whale[index1:index2] = partner[index1:index2]
-        new_whale[index2:index3] = self.best_solution[index2:index3]
+        new_whale = 0.5*((partner1**2 - partner2**2)*self.get_fitness(self.best_solution) +
+                         (partner2**2 - self.best_solution**2)*self.get_fitness(partner1) +
+                         (self.best_solution**2 - partner1**2)*self.get_fitness(partner2)) / \
+                         ((partner1 - partner2) * self.get_fitness(self.best_solution) +
+                          (partner2 - self.best_solution) * self.get_fitness(partner1) +
+                          (self.best_solution - partner1) * self.get_fitness(partner2))
 
         return new_whale
 
@@ -92,11 +89,11 @@ class ModifiedWOA(object):
         for epoch_i in range(self.max_ep):
             for i in range(self.population_size):
                 current_whale = self.population[i]
-                a = 2 - 2*epoch_i/self.max_ep
+                # a = 2 - 2*epoch_i/self.max_ep
                 # a = np.random.uniform(0, 2, 1)
                 # a = 2*np.cos(epoch_i/self.max_ep)
                 # a = math.log((4 - 3*epoch_i/(self.max_ep+1)), 2)
-                # a = 2 * np.cos(epoch_i / self.max_ep)
+                a = 2 * np.cos(epoch_i / self.max_ep)
                 a2 = -1 + epoch_i*((-1)/self.max_ep)
                 r1 = np.random.random(1)
                 r2 = np.random.random(1)
@@ -109,12 +106,12 @@ class ModifiedWOA(object):
                     if np.abs(A) < 1:
                         updated_whale = self.shrink_encircling_Levy(current_whale, self.best_solution, epoch_i, C)
                     else:
-                        if p1 < 0.6:
-                            updated_whale = self.explore_new_prey(current_whale, C, A)
-                        else:
-                            updated_whale = self.crossover(self.population)
+                        updated_whale = self.explore_new_prey(current_whale, C, A)
                 else:
-                    updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
+                    if p1 < 0.6:
+                        updated_whale = self.update_following_spiral(current_whale, self.best_solution, b, l)
+                    else:
+                        updated_whale = self.quadratic_interpolation(self.population)
                 self.population[i] = updated_whale
 
             self.population = self.evaluate_population(self.population)

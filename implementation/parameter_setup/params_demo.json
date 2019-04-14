@@ -1,8 +1,8 @@
 { "parameters":
   {
-    "function": ["f25"],
+    "function": ["f1"],
 
-    "dimension": [20],
+    "dimension": [50],
 
     "range0": [-100],
 
@@ -10,7 +10,7 @@
 
     "IGSO":
       {
-        "m": [20],
+        "m": [15],
         "n": [5],
         "l1": [20],
         "l2": [300],

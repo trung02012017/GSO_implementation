@@ -7,7 +7,7 @@ from copy import deepcopy
 import json
 from fitness_selector import Fitness_Selector
 from PSO_GSO import PSO
-from MWOA_GSO import ModifiedWOA
+from WOA_GSO import WhaleOptimizationAlgorithm
 
 class GalacticSwarmOptimization(object):
 
@@ -60,7 +60,7 @@ class GalacticSwarmOptimization(object):
                                                             # from each subswarm in phase 1
                                                             # the state of this phase will be ignored at the end of each
                                                             # epoch, only gBest is saved for next epoch
-        WOA = ModifiedWOA(self.fitness_function, self.dimension, self.m, gBest_collection, self.range0, self.range1,
+        WOA = WhaleOptimizationAlgorithm(self.fitness_function, self.dimension, self.m, gBest_collection, self.range0, self.range1,
                           self.l2)
         if gBest is not None:
             WOA.set_best_solution(gBest)
@@ -148,8 +148,8 @@ if __name__ == '__main__':
     def save_result(combination, all_gbests, gBest_fitness, total_time):
 
         fitness_function_name = combination[0]
-        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
-        path1 = path + 'error_IGSO' + str(combination) + '.csv'
+        path = '../results/' + str(fitness_function_name) + '/GSO3(GSO+WOA)/'
+        path1 = path + 'error_GSO3' + str(combination) + '.csv'
         path2 = path + 'models_log.csv'
         combination = [combination]
         error = {
@@ -185,8 +185,8 @@ if __name__ == '__main__':
 
 
     def save_result_stability(params, fitness_function_name, gBest_fitness, total_time):
-        path = '../results/' + str(fitness_function_name) + '/IGSO(GSO+MWOA)/'
-        path3 = path + 'stability_igso.csv'
+        path = '../results/' + str(fitness_function_name) + '/GSO3(GSO+WOA)/'
+        path3 = path + 'stability_gso3.csv'
         stability = {
             'combination': params,
             'gBest_fitness': gBest_fitness,
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     # fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
     # print(gBest_fitness_collection)
 
-    model_name = "IGSO(GSO+MWOA)"
+    model_name = "GSO3(GSO+WOA)"
 
     for combination in combinations:
         fitness_function_name = combination[0]
