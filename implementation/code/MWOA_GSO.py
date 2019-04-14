@@ -64,7 +64,7 @@ class ModifiedWOA(object):
         xich_ma_1, xich_ma_2 = self.caculate_xichma(beta)
         a = np.random.normal(0, xich_ma_1, 1)
         b = np.random.normal(0, xich_ma_2, 1)
-        LB = 0.01*a/(math.pow(np.abs(b), 1/beta))*(C*current_whale - best_solution)
+        LB = 0.01*a/(math.pow(np.abs(b), 1/beta))*(current_whale - best_solution)
         D = np.random.uniform(self.range0, self.range1, 1)
         levy = LB*D
         return (current_whale + 1/math.sqrt(epoch_i + 1)*np.sign(np.random.random(1) - 0.5))*levy
