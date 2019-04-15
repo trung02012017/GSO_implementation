@@ -124,7 +124,7 @@ if __name__ == '__main__':
     combinations = []
 
     for fitness_function_name in fitness_function_names:
-        if fitness_function_name == 'f18' or fitness_function_name == 'f19':
+        if fitness_function_name in ['f18', 'f19', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'f13']:
             continue
         for dimension in dimensions:
             for range0 in range0_s:
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         GSO = GalacticSwarmOptimization(fitness_function, dimension, range0, range1, m, n, l1, l2, max_ep, c1, c2)
         subswarm_collection = GSO.init_population()
         fitness_gBest, gBest_fitness_collection, total_time = GSO.run(subswarm_collection)
-        # save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
+        save_result(combination, gBest_fitness_collection, fitness_gBest, total_time)
         print('combination:{} and gBest fitness: {} and total time: {}'.format(combination, fitness_gBest, total_time))
 
         params = []
