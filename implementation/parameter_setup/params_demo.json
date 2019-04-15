@@ -1,8 +1,8 @@
 { "parameters":
   {
-    "function": ["f1"],
+    "function": ["f4"],
 
-    "dimension": [50],
+    "dimension": [100],
 
     "range0": [-100],
 
